@@ -24,14 +24,18 @@ trigger:
     at: !input time_off
 condition: []
 action:
-  - if:
-      - condition: trigger
-        id: "on"
-    then:
-      - service: homeassistant.turn_on
-        data: {}
-        target: !input target
-    else:
-      - service: homeassistant.turn_off
-        data: {}
-        target: !input target
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "on"
+        sequence:
+          - service: homeassistant.turn_on
+            data: {}
+            target: !input target
+      - conditions:
+          - condition: trigger
+            id: "off"
+        sequence:
+          - service: homeassistant.turn_off
+            data: {}
+            target: !input target
