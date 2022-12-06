@@ -1,0 +1,37 @@
+blueprint:
+  name: Schalte laut Zeitplan
+  description: Schalte basierend auf einem Zeitplan
+  domain: automation
+  input:
+    time_on:
+      name: Uhrzeit an
+      selector:
+        time:
+    time_off:
+      name: Uhrzeit aus
+      selector:
+        time:
+    target:
+      name: Ziel
+      selector:
+        target:
+trigger:
+  - platform: time
+    id: "on"
+    at: !input time_on
+  - platform: time
+    id: "off"
+    at: !input time_off
+condition: []
+action:
+  - if:
+      - condition: trigger
+        id: "on"
+    then:
+      - service: homeassistant.turn_on
+        data: {}
+        target: !input target
+    else:
+      - service: homeassistant.turn_off
+        data: {}
+        target: !input target
