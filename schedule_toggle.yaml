@@ -17,25 +17,22 @@ blueprint:
         target:
 trigger:
   - platform: time
-    id: "on"
     at: !input time_on
   - platform: time
-    id: "off"
     at: !input time_off
+  - platform: homeassistant
+    event: start
 condition: []
 action:
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: "on"
-        sequence:
-          - service: homeassistant.turn_on
-            data: {}
-            target: !input target
-      - conditions:
-          - condition: trigger
-            id: "off"
-        sequence:
-          - service: homeassistant.turn_off
-            data: {}
-            target: !input target
+  - if:
+      - condition: time
+        after: !input time_on
+        before: !input time_off
+    then:
+      - service: homeassistant.turn_on
+        data: {}
+        target: !input target
+    else:
+      - service: homeassistant.turn_off
+        data: {}
+        target: !input target
