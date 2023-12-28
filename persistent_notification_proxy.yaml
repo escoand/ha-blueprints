@@ -1,0 +1,65 @@
+blueprint:
+  name: Persistent notification proxy
+  description: Forward persistent notifications to a mobile app and handle dismissle
+  domain: automation
+  input:
+    app:
+      name: Mobile app
+      selector:
+        entity:
+          filter:
+            - integration: mobile_app
+              domain: notify
+
+mode: parallel
+
+trigger:
+  - platform: persistent_notification
+    update_type:
+      - added
+      - current
+      - updated
+    id: created
+  - platform: persistent_notification
+    update_type:
+      - removed
+    id: dismissed
+  - platform: event
+    event_type: mobile_app_notification_cleared
+    id: cleared
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id:
+              - created
+        sequence:
+          - service: !input app
+            data:
+              title: >-
+                {% if trigger.notification.title is not none %}{{
+                trigger.notification.title }}{% endif %}
+              message: "{{ trigger.notification.message }}"
+              data:
+                tag: "{{ trigger.notification.notification_id }}"
+      - conditions:
+          - condition: trigger
+            id:
+              - dismissed
+        sequence:
+          - service: !input app
+            data:
+              message: clear_notification
+              data:
+                tag: "{{ trigger.notification.notification_id }}"
+      - conditions:
+          - condition: trigger
+            id:
+              - cleared
+        sequence:
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: "{{ trigger.event.data.tag }}"
