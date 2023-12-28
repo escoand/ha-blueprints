@@ -3,13 +3,11 @@ blueprint:
   description: Forward persistent notifications to a mobile app and handle dismissle
   domain: automation
   input:
-    app:
+    service:
       name: Mobile app
+      description: "Name of the notify service, e.g.: notify.mobile_app_*"
       selector:
-        entity:
-          filter:
-            - integration: mobile_app
-              domain: notify
+        text:
 
 mode: parallel
 
@@ -37,7 +35,7 @@ action:
             id:
               - created
         sequence:
-          - service: !input app
+          - service: !input service
             data:
               title: >-
                 {% if trigger.notification.title is not none %}{{
@@ -50,7 +48,7 @@ action:
             id:
               - dismissed
         sequence:
-          - service: !input app
+          - service: !input service
             data:
               message: clear_notification
               data:
