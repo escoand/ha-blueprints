@@ -1,38 +1,126 @@
 blueprint:
   name: Schalte laut Zeitplan
-  description: Schalte basierend auf einem Zeitplan
+  description: |-
+    Einfache Möglichkeit Aktionen zu bestimmten Zeitpunkten auszuführen.
+    Diese Blaupause unterstützt simple Uhrzeiten oder Kalender Einträge.
+    
+    Historie:
+    * 2022-12-10 Erste Version
+    * 2024-01-03 Kalender und komplexe Aktionen hinzugefügt
+  source_url: https://github.com/escoand/ha-blueprints/blob/main/schedule_toggle.yaml
   domain: automation
+
   input:
     time_on:
       name: Uhrzeit an
+      description: An bei dieser Uhrzeit.
       selector:
         time:
+      default: ~
     time_off:
       name: Uhrzeit aus
+      description: Aus bei dieser Uhrzeit.
       selector:
         time:
-    target:
-      name: Ziel
+      default: ~
+    calendar:
+      name: Kalender
+      description: >-
+        An/Aus bei Start/Ende eines Kalender Eintrages.
+        Wenn nicht gewünscht einen Platzhalter eintragen, z.B. `calendar.NOT_EXISTING`
       selector:
-        target:
+        entity:
+          filter:
+            domain: calendar
+      default: calendar.NOT_EXISTING
+    calendar_filter:
+      name: Kalender Eintrag Filter
+      description: Reagiere nur bei Kalender Einträgen mit folgendem Titel.
+      default: ~
+    target:
+      name: Einfaches An/Aus
+      description: Ausreichend für z.B. Schalter.
+      selector:
+        target: {}
+      default: {}
+    action_on:
+      name: Komplexe An-Aktion
+      description: Aktion die bei An-Ereignis ausgeführt werden soll.
+      selector:
+        action:
+      default: []
+    action_off:
+      name: Komplexe Aus-Aktion
+      description: Aktion die bei Aus-Ereignis ausgeführt werden soll.
+      selector:
+        action:
+      default: []
+
+mode: parallel
+
+variables:
+  time_on: !input time_on
+  time_off: !input time_off
+  calendar_filter: !input calendar_filter
+
 trigger:
   - platform: time
     at: !input time_on
+    id: start
   - platform: time
     at: !input time_off
+  - platform: calendar
+    entity_id: !input calendar
   - platform: homeassistant
     event: start
-condition: []
+
+condition:
+  - condition: or
+    conditions:
+      - condition: template
+        value_template: >-
+          {{
+              trigger.platform == "time"
+          }}
+      - condition: template
+        value_template: >-
+          {{
+            trigger.platform == "calendar" and (
+              calendar_filter is undefined or
+              trigger.calendar_event.summary == calendar_filter
+            )
+          }}
+      - condition: template
+        value_template: >-
+          {{
+            trigger.platform == "homeassistant" and
+            time_on is defined and
+            time_off is defined and
+            now() >= today_at(time_on) and
+            now() <= today_at(time_off)
+          }}
+
 action:
   - if:
-      - condition: time
-        after: !input time_on
-        before: !input time_off
-    then:
-      - service: homeassistant.turn_on
-        data: {}
-        target: !input target
-    else:
-      - service: homeassistant.turn_off
-        data: {}
-        target: !input target
+      - condition: template
+        value_template: >-
+          {{
+            trigger.event == "start" or
+            trigger.id == "start"
+          }}
+      then:
+        - service: homeassistant.turn_on
+          data: {}
+          target: !input target
+        - if:
+            - condition: template
+              value_template: "{{ true }}"
+          then: !input action_on
+      else:
+        - service: homeassistant.turn_off
+          data: {}
+          target: !input target
+        - if:
+            - condition: template
+              value_template: "{{ true }}"
+          then: !input action_off
