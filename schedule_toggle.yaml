@@ -7,7 +7,6 @@ blueprint:
     Historie:
     * 2022-12-10 Erste Version
     * 2024-01-03 Kalender und komplexe Aktionen hinzugefügt
-  source_url: https://github.com/escoand/ha-blueprints/blob/main/schedule_toggle.yaml
   domain: automation
 
   input:
