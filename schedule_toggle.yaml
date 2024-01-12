@@ -70,6 +70,10 @@ trigger:
     at: !input time_off
   - platform: calendar
     entity_id: !input calendar
+    event: start
+  - platform: calendar
+    entity_id: !input calendar
+    event: end
   - platform: homeassistant
     event: start
 
