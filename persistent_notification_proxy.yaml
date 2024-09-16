@@ -8,7 +8,6 @@ blueprint:
       description: "Name of the notify service, e.g.: notify.mobile_app_*"
       selector:
         text:
-          prefix: notify.
 
 mode: parallel
 
