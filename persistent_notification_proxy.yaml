@@ -7,7 +7,10 @@ blueprint:
       name: Mobile app
       description: "Name of the notify service, e.g.: notify.mobile_app_*"
       selector:
-        text:
+        entity:
+          filter:
+            domain: notify
+          multiple: true
 
 mode: parallel
 
