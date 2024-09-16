@@ -9,7 +9,6 @@ blueprint:
       selector:
         text:
           prefix: notify.
-          multiple: true
 
 mode: parallel
 
